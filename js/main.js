@@ -26,7 +26,9 @@ function renderLevel(app, level) {
     level.obj.forEach(obj => {
         let basicText = new PIXI.Text(obj.name, {
             fill: '#000',
-            fontSize: 70
+            fontSize: 80,
+            stroke: '#fff',
+            strokeThickness: 10,
         });
         basicText.x = obj.x;
         basicText.y = obj.y;
