@@ -17,7 +17,6 @@ function renderLevel(app, level) {
                 var coords = geoCoords.split(",");
                 geoObject.lineTo(coords[0]-geo.x, coords[1]-geo.y);
             })
-            geoObject.lineTo(geo.geo[0].split(",")[0], geo.geo[0].split(",")[1])
 
             this.viewport.addChild(geoObject)
         }
