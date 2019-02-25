@@ -37,11 +37,13 @@ function hslToHex(h, s, l) {
 function renderLevel(app, level) {
     //sort by layers
     level.geo.sort((a, b) => a.layer - b.layer)
+    level.geo.reverse()
 
     level.geo.forEach(geo => {
         if(geo.visible) {
             let geoObject = new PIXI.Graphics();
             geoObject.lineStyle(15, parseInt(hslToHex((geo.color+coloroffset)*45%360, 100, 50).replace('#',''), 16), 1);
+            geoObject.beginFill(parseInt(hslToHex((geo.color+coloroffset)*45%360, 80, 50).replace('#',''), 16), 0.9);
             
             geoObject.x = geo.x;
             geoObject.y = geo.y;
