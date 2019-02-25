@@ -89,6 +89,13 @@ window.onload = function() {
     if(!this.electron) {
         document.getElementById("loading-image").innerHTML = "Sorry, but WanderComposer only runs on Electron!"
     } else {
+        const electron = require('electron');
+        const fs = require('fs');
+
+        document.getElementById('button-file').onclick = () => {
+            this.electron.ipcRenderer.send("openLevelFile");
+        }
+
         //Create a Pixi Application
         app = new PIXI.Application({width: window.innerWidth, height: window.innerHeight});
 
@@ -118,15 +125,27 @@ window.onload = function() {
 
         this.viewport.addChild(graphics);
 
-        let level = require('./level.json');
-        renderLevel(level);
-
         //Add the canvas that Pixi automatically created for you to the HTML document
         document.getElementById("mapview").appendChild(app.view);
 
         document.addEventListener("DOMContentLoaded", resize, false);
         window.onresize = resize;
         resize(); resize(); //oh god
+
+        electron.ipcRenderer.on("openLevelFileCB", (e, file) => {
+            if(file) {
+                console.log('opening level file '+file)
+                fs.readFile(file[0], {encoding: 'utf8'}, (err, data) => {
+                    if (err) throw err;
+                    var level = data.split("\n")[1];
+                    renderLevel(JSON.parse(level));
+                })
+            } else {
+                window.close();
+            }
+        });
+
+        electron.ipcRenderer.send("openLevelFile");
 
         let i = 100;
         function loop () {

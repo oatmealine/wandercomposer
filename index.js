@@ -1,4 +1,4 @@
-const {app, BrowserWindow} = require('electron')
+const { app, protocol, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 
 // Keep a global reference of the window object, if you don't, the window will
 // be closed automatically when the JavaScript object is garbage collected.
@@ -34,15 +34,10 @@ function createWindow () {
     mainWindow.webContents
   })
 
-  mainWindow.webContents.on('console-message', (event, level, message) => {
-    if(message.startsWith('ELECTRON_')) {
-        let cmd = message.replace('ELECTRON_','').split(" ")[0]
-        let web = mainWindow.webContents
-
-        /*switch(cmd) {
-        }*/
-    }
-  })
+  ipcMain.on("openLevelFile", (event) => {
+    var levelFile = dialog.showOpenDialog({ properties: ['openFile'] })
+    event.sender.send("openLevelFileCB", levelFile);
+  });
 }
 
 // This method will be called when Electron has finished
