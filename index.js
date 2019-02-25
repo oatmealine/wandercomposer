@@ -39,23 +39,8 @@ function createWindow () {
         let cmd = message.replace('ELECTRON_','').split(" ")[0]
         let web = mainWindow.webContents
 
-        switch(cmd) {
-            case 'loaded':
-              let i = 100;
-
-              function loop () {
-                i--;
-                web.executeJavaScript('document.getElementById(\'loading\').style.opacity = '+i+'/100');
-                if(!i<=0) {
-                  setTimeout(loop, 3);
-                } else {
-                  web.executeJavaScript('document.getElementById(\'loading\').style.display = \'none\'');
-                }
-              }
-
-              loop();
-              break;
-        }
+        /*switch(cmd) {
+        }*/
     }
   })
 }

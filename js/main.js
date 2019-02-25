@@ -35,7 +35,7 @@ function hslToHex(h, s, l) {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-function renderLevel(app, level) {
+function renderLevel(level) {
     //sort by layers
     level.geo.sort((a, b) => a.layer - b.layer)
     level.geo.reverse()
@@ -119,7 +119,7 @@ window.onload = function() {
         this.viewport.addChild(graphics);
 
         let level = require('./level.json');
-        renderLevel(app, level);
+        renderLevel(level);
 
         //Add the canvas that Pixi automatically created for you to the HTML document
         document.getElementById("mapview").appendChild(app.view);
@@ -128,6 +128,17 @@ window.onload = function() {
         window.onresize = resize;
         resize(); resize(); //oh god
 
-        console.log('ELECTRON_loaded');
+        let i = 100;
+
+        function loop () {
+            i--;
+            document.getElementById('loading').style.opacity = i/100
+            if(!i<=0) {
+                setTimeout(loop, 3);
+            } else {
+                document.getElementById('loading').style.display = 'none'
+            }
+        }
+        loop();
     }
 }
