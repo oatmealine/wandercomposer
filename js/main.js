@@ -3,11 +3,43 @@ var nodeRequire = window["nodeRequire"] || window["require"];
 var app;
 var viewport;
 
+function hslToHex(h, s, l) {
+    h /= 360;
+    s /= 100;
+    l /= 100;
+    let r, g, b;
+    if (s === 0) {
+      r = g = b = l; // achromatic
+    } else {
+      const hue2rgb = (p, q, t) => {
+        if (t < 0) t += 1;
+        if (t > 1) t -= 1;
+        if (t < 1 / 6) return p + (q - p) * 6 * t;
+        if (t < 1 / 2) return q;
+        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+        return p;
+      };
+      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+      const p = 2 * l - q;
+      r = hue2rgb(p, q, h + 1 / 3);
+      g = hue2rgb(p, q, h);
+      b = hue2rgb(p, q, h - 1 / 3);
+    }
+    const toHex = x => {
+      const hex = Math.round(x * 255).toString(16);
+      return hex.length === 1 ? '0' + hex : hex;
+    };
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
 function renderLevel(app, level) {
+    //sort by layers
+    level.geo.sort((a, b) => a.layer - b.layer)
+
     level.geo.forEach(geo => {
         if(geo.visible) {
             let geoObject = new PIXI.Graphics();
-            geoObject.lineStyle(15, 0x000000, 1);
+            geoObject.lineStyle(15, parseInt(hslToHex(geo.color*45, 100, 50).replace('#',''), 16), 1);
             
             geoObject.x = geo.x;
             geoObject.y = geo.y;
@@ -26,9 +58,9 @@ function renderLevel(app, level) {
     level.obj.forEach(obj => {
         let basicText = new PIXI.Text(obj.name.replace("obj",""), {
             fill: '#000',
-            fontSize: 80,
+            fontSize: 100,
             stroke: '#fff',
-            strokeThickness: 10,
+            strokeThickness: 5,
         });
         basicText.x = obj.x;
         basicText.y = obj.y;
@@ -38,7 +70,14 @@ function renderLevel(app, level) {
 }
 
 function resize() {
-    app.renderer.resize(window.innerWidth, window.innerHeight);
+    const parent = app.view.parentElement;
+    if (!parent)
+        return;
+    const { clientWidth: width, clientHeight: height } = parent;
+    app.renderer.resize(width, height);
+    this.viewport.screenWidth = width;
+    this.viewport.screenHeight = height;
+    //app.renderer.resize(window.innerWidth, window.innerHeight);
 }
 
 window.onload = function() {
@@ -47,7 +86,7 @@ window.onload = function() {
         document.getElementById("loading-image").innerHTML = "Sorry, but WanderComposer only runs on Electron!"
     } else {
         //Create a Pixi Application
-        app = new PIXI.Application({width: 256, height: 256});
+        app = new PIXI.Application({width: window.innerWidth, height: window.innerHeight});
 
         let graphics = new PIXI.Graphics();
         graphics.beginFill(0x000000);
@@ -63,7 +102,7 @@ window.onload = function() {
             interaction: this.interaction
         });
         
-        app.renderer.backgroundColor = 0xffffff;
+        app.renderer.backgroundColor = 0x444444;
         app.renderer.view.style.position = "absolute";
         app.renderer.view.style.display = "block";
 
