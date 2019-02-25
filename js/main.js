@@ -129,12 +129,11 @@ window.onload = function() {
         resize(); resize(); //oh god
 
         let i = 100;
-
         function loop () {
-            i--;
             document.getElementById('loading').style.opacity = i/100
             if(!i<=0) {
-                setTimeout(loop, 3);
+                i--;
+                setTimeout(loop, 1);
             } else {
                 document.getElementById('loading').style.display = 'none'
             }
