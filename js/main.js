@@ -3,7 +3,8 @@ var nodeRequire = window["nodeRequire"] || window["require"];
 var app;
 var viewport;
 
-var coloroffset = Math.floor(Math.random()*360);
+//var coloroffset = Math.floor(Math.random()*360);
+var coloroffset = 0;
 
 function hslToHex(h, s, l) {
     h /= 360;
