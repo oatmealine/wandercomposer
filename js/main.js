@@ -24,7 +24,7 @@ function renderLevel(app, level) {
     })
 
     level.obj.forEach(obj => {
-        let basicText = new PIXI.Text(obj.name, {
+        let basicText = new PIXI.Text(obj.name.replace("obj",""), {
             fill: '#000',
             fontSize: 80,
             stroke: '#fff',
