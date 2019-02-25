@@ -16,10 +16,11 @@ function createWindow () {
     }
   })
 
+  mainWindow.setMenuBarVisibility(false);
+  mainWindow.setIcon("./icon.png")
+
   // and load the index.html of the app.
   mainWindow.loadFile('index.html')
-
-  mainWindow.setIcon("./icon.png")
 
   // Emitted when the window is closed.
   mainWindow.on('closed', function () {

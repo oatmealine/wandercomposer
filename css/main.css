@@ -34,8 +34,20 @@ p1 {
     opacity: 1;
 }
 
+#header {
+    position: absolute;
+    height: 35px;
+    width: 100%;
+    background-color: #eee;
+    color: #111;
+    top: 0;
+    left: 0;
+}
 #mapview {
-    overflow: scroll;
-    border:1px solid #fff;
-    opacity:0;
+    z-index: 0;
+    position: absolute;
+    top: 35px;
+    left: 0px;
+    bottom: 0;
+    right: 0;
 }

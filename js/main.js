@@ -3,6 +3,8 @@ var nodeRequire = window["nodeRequire"] || window["require"];
 var app;
 var viewport;
 
+var coloroffset = Math.floor(Math.random()*360);
+
 function hslToHex(h, s, l) {
     h /= 360;
     s /= 100;
@@ -39,7 +41,7 @@ function renderLevel(app, level) {
     level.geo.forEach(geo => {
         if(geo.visible) {
             let geoObject = new PIXI.Graphics();
-            geoObject.lineStyle(15, parseInt(hslToHex(geo.color*45, 100, 50).replace('#',''), 16), 1);
+            geoObject.lineStyle(15, parseInt(hslToHex((geo.color+coloroffset)*45%360, 100, 50).replace('#',''), 16), 1);
             
             geoObject.x = geo.x;
             geoObject.y = geo.y;
@@ -57,10 +59,8 @@ function renderLevel(app, level) {
 
     level.obj.forEach(obj => {
         let basicText = new PIXI.Text(obj.name.replace("obj",""), {
-            fill: '#000',
-            fontSize: 100,
-            stroke: '#fff',
-            strokeThickness: 5,
+            fill: '#fff',
+            fontSize: 100
         });
         basicText.x = obj.x;
         basicText.y = obj.y;
@@ -70,14 +70,15 @@ function renderLevel(app, level) {
 }
 
 function resize() {
-    const parent = app.view.parentElement;
-    if (!parent)
-        return;
-    const { clientWidth: width, clientHeight: height } = parent;
-    app.renderer.resize(width, height);
-    this.viewport.screenWidth = width;
-    this.viewport.screenHeight = height;
-    //app.renderer.resize(window.innerWidth, window.innerHeight);
+    setTimeout(() => {
+        const parent = app.view.parentElement;
+        if (!parent)
+            return;
+        const { clientWidth: width, clientHeight: height } = parent;
+        app.renderer.resize(width, height);
+        this.viewport.screenWidth = width;
+        this.viewport.screenHeight = height;
+    }, 15) //im so sorry for this i couldnt fix it any other way
 }
 
 window.onload = function() {
@@ -112,15 +113,17 @@ window.onload = function() {
             .pinch()
             .wheel({ smooth: 6 });
 
-        window.onresize = resize; resize();
-
         this.viewport.addChild(graphics);
 
         let level = require('./level.json');
         renderLevel(app, level);
 
         //Add the canvas that Pixi automatically created for you to the HTML document
-        document.body.appendChild(app.view);
+        document.getElementById("mapview").appendChild(app.view);
+
+        document.addEventListener("DOMContentLoaded", resize, false);
+        window.onresize = resize;
+        resize(); resize(); //oh god
 
         console.log('ELECTRON_loaded');
     }
