@@ -1,0 +1,41 @@
+body {
+    background-color: #333;
+    color: #eee;
+    margin: 0;
+    padding: 0;
+}
+
+p1 {
+    text-decoration-style: solid;
+    line-height: 30px;
+    font-weight: bold;
+    text-decoration: underline;
+    font-size: 30px;
+}
+
+#loading {
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    position: fixed;
+    display: block;
+    opacity: 0.8;
+    background-color: #555;
+    z-index: 99;
+    text-align: center;
+}
+
+#loading-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translateX(-50%) translateY(-50%);
+    opacity: 1;
+}
+
+#mapview {
+    overflow: scroll;
+    border:1px solid #fff;
+    opacity:0;
+}
