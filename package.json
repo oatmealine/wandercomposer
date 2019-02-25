@@ -1,0 +1,29 @@
+{
+  "name": "wandercomposer",
+  "version": "1.0.0",
+  "description": "a level editor for wandersong",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thefoxbot/wandercomposer.git"
+  },
+  "keywords": [
+    "wandersong",
+    "level",
+    "level-editor",
+    "modding",
+    "mod"
+  ],
+  "author": "thefox",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/thefoxbot/wandercomposer/issues"
+  },
+  "homepage": "https://github.com/thefoxbot/wandercomposer#readme",
+  "dependencies": {
+    "electron": "^4.0.5"
+  }
+}
