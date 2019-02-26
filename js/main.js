@@ -131,11 +131,16 @@ function renderLevel(level) {
 
             if(chosenpalette === 'color') {
                 colors = [];
-                for (i = 0; i<=20; i++) {
-                    colors[i] = parseInt(hslToHex(i*45%360, 100, 50), 16)
+                for (i = 0; i<=200; i++) {
+                    colors[i] = parseInt(hslToHex(i*40%360, 100, 50), 16)
                 }
             } else {
                 colors = palette[chosenpalette];
+            }
+
+            //colors 100+ are weird and seem to be the same for each palette so we add them in for any palette
+            for (i = 100; i<=150; i++) {
+                colors[i] = parseInt(hslToHex((i-100)*20%360, 100, 50), 16)
             }
             let fillColors = colors //TODO: make colors darker instead of using regular colors
 
