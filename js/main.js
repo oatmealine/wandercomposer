@@ -215,8 +215,8 @@ function assetsLoaded() {
         level = JSON.parse(data.split("\n")[1]);
         var pathArr = file[0].split("/")
         var filename = pathArr[pathArr.length-1]
-        document.title = filename + " - WanderComposer"
-        if(filename === "act00_intro.level") chosenpalette = "intro";
+        document.title = "WanderComposer"
+        chosenpalette = "intro";
         renderLevel(level);
     })
 }
@@ -301,7 +301,6 @@ window.onload = function() {
                     var pathArr = file[0].split("/")
                     var filename = pathArr[pathArr.length-1]
                     document.title = filename + " - WanderComposer"
-                    if(filename === "act00_intro.level") chosenpalette = "intro";
                     renderLevel(level);
                 })
             } else {
