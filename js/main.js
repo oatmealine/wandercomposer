@@ -100,6 +100,7 @@ function renderLevel(level) {
     level.geo.forEach(geo => {
         if(geo.visible) {
             let geoObject = new PIXI.Graphics();
+            let saturateFilter = new PIXI.filters.ColorMatrixFilter();
             let colors;
 
             if(chosenpalette === 'color') {
@@ -116,14 +117,6 @@ function renderLevel(level) {
                 colors[i] = parseInt(colorconvert.hsl.hex((i-100)*20%360, 100, 50), 16)
             }
 
-            let fillColors = [];
-            colors.forEach(c => {
-                let hslcolor = colorconvert.hex.hsl(c.toString(16))
-                hslcolor[2] += 10;
-                fillColors.push(parseInt(colorconvert.hsl.hex(hslcolor), 16));
-            })
-
-
             geoObject.lineStyle(15, colors[geo.color], 1);
             geoObject.beginFill(colors[geo.color], 0.8);
             
@@ -137,9 +130,11 @@ function renderLevel(level) {
             //mouse-over ver with different colors
             
             geoObject.mouseOverSprite = new PIXI.Graphics();
-            geoObject.mouseOverSprite.visible = false;
-            geoObject.mouseOverSprite.lineStyle(15, fillColors[geo.color], 1);
-            geoObject.mouseOverSprite.beginFill(colors[geo.color], 0.9);
+            let mouseOver = geoObject.mouseOverSprite
+            mouseOver.visible = false;
+            mouseOver.lineStyle(15, colors[geo.color], 1);
+            mouseOver.beginFill(colors[geo.color], 0.9);
+            mouseOver.filters = [saturateFilter]
             renderGeo(geo, geoObject.mouseOverSprite)
 
             geoObject.mouseOverSprite.x = geo.x;
