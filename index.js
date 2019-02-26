@@ -35,7 +35,7 @@ function createWindow () {
   })
 
   ipcMain.on("openLevelFile", (event) => {
-    var levelFile = dialog.showOpenDialog({ properties: ['openFile'] })
+    var levelFile = dialog.showOpenDialog({ title: "Open a Wandersong .level file!", properties: ['openFile'] })
     event.sender.send("openLevelFileCB", levelFile);
   });
 }

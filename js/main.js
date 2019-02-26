@@ -2,8 +2,8 @@ var nodeRequire = window["nodeRequire"] || window["require"];
 
 var app;
 var viewport;
+var level;
 
-//var coloroffset = Math.floor(Math.random()*360);
 var coloroffset = 0;
 
 function hslToHex(h, s, l) {
@@ -35,7 +35,53 @@ function hslToHex(h, s, l) {
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
+function displayLoadScreen(bool) {
+    //TODO:
+}
+
+function displayGeoInfo(geo) {
+    let editPopup = document.getElementById('edit-popup');
+    let editPopupContent = document.getElementById('edit-popup-content');
+
+    editPopup.style.display = "block";
+    editPopupContent.innerHTML = `
+    <span class="edit-close">x</span>
+    <p1>Geometrical Shape | ${geo.id}</p1><br>
+    <b>X</b>: ${geo.x}<br>
+    <b>Y</b>: ${geo.y}<br>
+    <b>Color</b>: ${geo.color}<br>
+    <b>Support Points</b>: <a id="edit-supportpoints" class="waves-effect waves-light btn-small">Toggle Visibility</a><br>
+    <div id="support-points" style="display:none;">
+        - ${geo.geo.join("<br> - ")}
+    </div><br>
+    `
+
+    //overwriting the edit-close class removes the onclick function, so we add it back
+    document.getElementsByClassName("edit-close")[0].onclick = function() {
+        editPopup.style.display = "none";
+    }
+    //same for other stuff that had .onclick in that popup
+    document.getElementById("edit-supportpoints").onclick = function() {
+        let supportpoints = document.getElementById("support-points");
+        if(supportpoints.style.display === "none") {supportpoints.style.display = "block"} else supportpoints.style.display = "none"
+    }
+}
+
+
+function renderGeo(geo, geoObject) {
+    geoObject.moveTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
+    geo.geo.forEach(geoCoords => {
+        var coords = geoCoords.split(",");
+        geoObject.lineTo(coords[0]-geo.x, coords[1]-geo.y);
+    })
+    geoObject.lineTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
+}
+
 function renderLevel(level) {
+    //clear to prevent level "clashing"
+    app.renderer.clear()
+    while(this.viewport.children.length > 0){ var child = this.viewport.getChildAt(0); this.viewport.removeChild(child);}
+
     //sort by layers
     level.geo.sort((a, b) => a.layer - b.layer)
     level.geo.reverse()
@@ -49,14 +95,36 @@ function renderLevel(level) {
             geoObject.x = geo.x;
             geoObject.y = geo.y;
 
-            geoObject.moveTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
-            geo.geo.forEach(geoCoords => {
-                var coords = geoCoords.split(",");
-                geoObject.lineTo(coords[0]-geo.x, coords[1]-geo.y);
+            geoObject.interactive = true;
+
+            renderGeo(geo, geoObject)
+
+            //mouse-over ver with different colors
+            
+            geoObject.mouseOverSprite = new PIXI.Graphics();
+            geoObject.mouseOverSprite.visible = false;
+            geoObject.mouseOverSprite.lineStyle(15, parseInt(hslToHex((geo.color+coloroffset)*45%360, 100, 50).replace('#',''), 16), 1);
+            geoObject.mouseOverSprite.beginFill(parseInt(hslToHex((geo.color+coloroffset)*45%360, 90, 50).replace('#',''), 16), 1);
+            renderGeo(geo, geoObject.mouseOverSprite)
+
+            geoObject.mouseOverSprite.x = geo.x;
+            geoObject.mouseOverSprite.y = geo.y;
+
+            geoObject.on('rightclick', () => {
+                displayGeoInfo(geo)
+            });
+            
+            geoObject.on('mouseover', () => {
+                geoObject.alpha = 0; // we use alpha here because !visible doesnt allow events to be called
+                geoObject.mouseOverSprite.visible = true;
             })
-            geoObject.lineTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
+            geoObject.on('mouseout', () => {
+                geoObject.alpha = 1; // we use alpha here because !visible doesnt allow events to be called
+                geoObject.mouseOverSprite.visible = false;
+            })
 
             this.viewport.addChild(geoObject)
+            this.viewport.addChild(geoObject.mouseOverSprite)
         }
     })
 
@@ -67,6 +135,10 @@ function renderLevel(level) {
         });
         basicText.x = obj.x;
         basicText.y = obj.y;
+
+        basicText.interactive = true;
+
+        basicText.json = obj
 
         this.viewport.addChild(basicText);
     })
@@ -96,12 +168,16 @@ window.onload = function() {
             this.electron.ipcRenderer.send("openLevelFile");
         }
 
+        let editPopup = document.getElementById('edit-popup');
+
+        window.onclick = function(event) {
+            if (event.target == editPopup) {
+                editPopup.style.display = "none";
+            }
+        }
+
         //Create a Pixi Application
         app = new PIXI.Application({width: window.innerWidth, height: window.innerHeight});
-
-        let graphics = new PIXI.Graphics();
-        graphics.beginFill(0x000000);
-        graphics.lineStyle(5, 0x000000);
 
         //viewport
         const Viewport = PIXI.extras.Viewport;
@@ -123,8 +199,6 @@ window.onload = function() {
             .pinch()
             .wheel({ smooth: 6 });
 
-        this.viewport.addChild(graphics);
-
         //Add the canvas that Pixi automatically created for you to the HTML document
         document.getElementById("mapview").appendChild(app.view);
 
@@ -137,11 +211,13 @@ window.onload = function() {
                 console.log('opening level file '+file)
                 fs.readFile(file[0], {encoding: 'utf8'}, (err, data) => {
                     if (err) throw err;
-                    var level = data.split("\n")[1];
+                    level = data.split("\n")[1];
                     renderLevel(JSON.parse(level));
                 })
             } else {
-                window.close();
+                if(!level) {
+                    window.close();
+                }
             }
         });
 
