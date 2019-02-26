@@ -158,28 +158,35 @@ function renderLevel(level) {
                 geoObject.mouseOverSprite.visible = false;
             })
 
-            this.viewport.addChild(geoObject)
-            this.viewport.addChild(geoObject.mouseOverSprite)
+            this.viewport.addChild(geoObject, geoObject.mouseOverSprite)
         }
     })
 
     level.obj.forEach(obj => {
         let object;
+        
         if(render[obj.name] === undefined) {
-            object = new PIXI.Text(obj.name.replace("obj",""), {
-                fill: '#fff',
-                fontSize: 100
-            });
-
-            object.x = obj.x;
-            object.y = obj.y;
+            object = render["unknown"](obj, false)
+            object.mouseOverSprite = render["unknown"](obj, true)
         } else {
             console.log(obj.name+" has custom render function")
             object = render[obj.name](obj, false) //second parameter is for "selected"
+            object.mouseOverSprite = render[obj.name](obj, true) 
         }
 
         object.interactive = true;
-        this.viewport.addChild(object);
+        object.mouseOverSprite.visible = false;
+
+        object.on('mouseover', () => {
+            object.alpha = 0; // we use alpha here because !visible doesnt allow events to be called
+            object.mouseOverSprite.visible = true;
+        })
+        object.on('mouseout', () => {
+            object.alpha = 1; // we use alpha here because !visible doesnt allow events to be called
+            object.mouseOverSprite.visible = false;
+        })
+
+        this.viewport.addChild(object, object.mouseOverSprite);
     })
     displayLoadScreen(false);
 }
