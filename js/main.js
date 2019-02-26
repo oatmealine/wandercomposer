@@ -22,8 +22,8 @@ function displayLoadScreen(bool) {
         function loop () {
             document.getElementById('loading').style.opacity = i/100
             if(!i>=100) {
-                i++;
-                setTimeout(loop, 1);
+                i+=10;
+                setTimeout(loop, 10);
             }
         }
         loop();
@@ -33,8 +33,8 @@ function displayLoadScreen(bool) {
         function loop () {
             document.getElementById('loading').style.opacity = i/100;
             if(!i<=0) {
-                i--;
-                setTimeout(loop, 1);
+                i-=10;
+                setTimeout(loop, 10);
             } else {
                 document.getElementById('loading').style.display = 'none';
             }
@@ -48,7 +48,7 @@ function popUp(text) {
     let editPopupContent = document.getElementById('edit-popup-content');
 
     editPopup.style.display = "block";
-    editPopupContent.innerHTML = '<span class="edit-close">x</span>'+text;
+    editPopupContent.innerHTML = '<a class="btn-floating btn-large waves-effect waves-light red edit-close"><i class="material-icons">clear</i></a>' + text;
 
     //overwriting the edit-close class removes the onclick function, so we add it back
     document.getElementsByClassName("edit-close")[0].onclick = function() {
@@ -74,23 +74,28 @@ function displayGeoInfo(geo) {
     }
 }
 
-function displayObjInfo(obj) {
+function displayObjInfo(obj, i) {
+    console.log(obj)
     var popupText = `
     <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
-    <b>X</b>: ${obj.x}<br>
-    <b>Y</b>: ${obj.y}<br>
+    <b>X</b>: <input type="text" name="edit-x" class="edit-textfield" value="${obj.x}"><br>
+    <b>Y</b>: <input type="text" name="edit-y" class="edit-textfield" value="${obj.y}"><br>
     `
 
     Object.keys(obj).forEach(key => {
         if (!['name','x','y','id'].includes(key)) {
-            popupText += `<b>${key}</b>: ${obj[key]}<br>`
+            popupText += `<b>${key}</b>: <input type="text" name="edit-${key}" class="edit-textfield" value="${obj[key]}"><br>` //oh boy
         }
     })
+    popupText += '<a class="waves-effect waves-light btn-small" id="button-update">update</a>'
     popUp(popupText)
 
-    document.getElementById("edit-supportpoints").onclick = function() {
-        let supportpoints = document.getElementById("support-points");
-        if(supportpoints.style.display === "none") {supportpoints.style.display = "block"} else supportpoints.style.display = "none"
+    document.getElementById("button-update").onclick = () => {
+        //oh BOY
+        Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
+            level.obj.find(o => o.id === obj.id)[textfield.name.replace("edit-","")] = parseInt(textfield.value);
+        })
+        renderLevel(level);
     }
 }
 
@@ -117,7 +122,7 @@ function renderLevel(level) {
     level.geo.sort((a, b) => a.layer - b.layer)
     level.geo.reverse()
 
-    level.geo.forEach(geo => {
+    level.geo.forEach((geo, indx) => {
         if(geo.visible) {
             let geoObject = new PIXI.Graphics();
             let saturateFilter = new PIXI.filters.ColorMatrixFilter();
@@ -177,7 +182,7 @@ function renderLevel(level) {
         }
     })
 
-    level.obj.forEach(obj => {
+    level.obj.forEach((obj, i) => {
         let object;
         
         if(render[obj.name] === undefined) {
@@ -193,7 +198,7 @@ function renderLevel(level) {
         object.mouseOverSprite.visible = false;
 
         object.on('rightclick', () => {
-            displayObjInfo(obj)
+            displayObjInfo(obj, i)
         });
 
         object.on('mouseover', () => {
