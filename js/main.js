@@ -281,6 +281,8 @@ window.onload = function() {
                 fs.readFile(file[0], {encoding: 'utf8'}, (err, data) => {
                     if (err) throw err;
                     level = JSON.parse(data.split("\n")[1]);
+                    var pathArr = file[0].split("/")
+                    document.title = pathArr[pathArr.length-1] + " - WanderComposer"
                     renderLevel(level);
                 })
             } else {
@@ -290,10 +292,16 @@ window.onload = function() {
             }
         });
 
-        PIXI.loader
-            .add("assets/obj/seal.png")
-            .add("assets/obj/bard.png")
+        fs.readdir("./assets/obj", (e, files) => {
+            if(e) throw e;
+            files.forEach((file, i) => {
+                files[i] = 'assets/obj/'+file
+            })
+
+            PIXI.Loader.shared
+            .add(files)
             .on("progress", loadProgressHandler)
             .load(assetsLoaded);
+        })
     }
 }
