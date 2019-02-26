@@ -203,7 +203,22 @@ function loadProgressHandler(loader, resource) {
 }
 
 function assetsLoaded() {
-    electron.ipcRenderer.send("openLevelFile");
+    const fs = require('fs');
+
+    //open up the demo (prologue) level on boot
+    //TODO: open last edited level instead
+    file = './js/act00_intro.level';
+    console.log('opening level file '+file);
+
+    fs.readFile('./js/act00_intro.level', {encoding: 'utf8'}, (err, data) => {
+        if (err) throw err;
+        level = JSON.parse(data.split("\n")[1]);
+        var pathArr = file[0].split("/")
+        var filename = pathArr[pathArr.length-1]
+        document.title = filename + " - WanderComposer"
+        if(filename === "act00_intro.level") chosenpalette = "intro";
+        renderLevel(level);
+    })
 }
 
 window.onload = function() {
@@ -284,7 +299,9 @@ window.onload = function() {
                     if (err) throw err;
                     level = JSON.parse(data.split("\n")[1]);
                     var pathArr = file[0].split("/")
-                    document.title = pathArr[pathArr.length-1] + " - WanderComposer"
+                    var filename = pathArr[pathArr.length-1]
+                    document.title = filename + " - WanderComposer"
+                    if(filename === "act00_intro.level") chosenpalette = "intro";
                     renderLevel(level);
                 })
             } else {
