@@ -79,5 +79,6 @@ module.exports = {
 
     objSeal: generic2x,
     objLightbulb: generic2x,
-    objEnemy_bat: generic2x
+    objEnemy_bat: generic2x,
+    objSWORD: generic2x
 }
