@@ -74,6 +74,26 @@ function displayGeoInfo(geo) {
     }
 }
 
+function displayObjInfo(obj) {
+    var popupText = `
+    <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
+    <b>X</b>: ${obj.x}<br>
+    <b>Y</b>: ${obj.y}<br>
+    `
+
+    Object.keys(obj).forEach(key => {
+        if (!['name','x','y','id'].includes(key)) {
+            popupText += `<b>${key}</b>: ${obj[key]}<br>`
+        }
+    })
+    popUp(popupText)
+
+    document.getElementById("edit-supportpoints").onclick = function() {
+        let supportpoints = document.getElementById("support-points");
+        if(supportpoints.style.display === "none") {supportpoints.style.display = "block"} else supportpoints.style.display = "none"
+    }
+}
+
 
 function renderGeo(geo, geoObject) {
     geoObject.moveTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
@@ -171,6 +191,10 @@ function renderLevel(level) {
 
         object.interactive = true;
         object.mouseOverSprite.visible = false;
+
+        object.on('rightclick', () => {
+            displayObjInfo(obj)
+        });
 
         object.on('mouseover', () => {
             object.alpha = 0; // we use alpha here because !visible doesnt allow events to be called
