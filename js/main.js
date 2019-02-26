@@ -119,7 +119,7 @@ function renderLevel(level) {
             let fillColors = [];
             colors.forEach(c => {
                 let hslcolor = colorconvert.hex.hsl(c.toString(16))
-                hslcolor[2] = 60;
+                hslcolor[2] += 10;
                 fillColors.push(parseInt(colorconvert.hsl.hex(hslcolor), 16));
             })
 
