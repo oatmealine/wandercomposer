@@ -1,3 +1,4 @@
+//all the object render functions are stored here
 const selectFilter = new PIXI.filters.OutlineFilter(2, 0x99ff99);
 
 /* 

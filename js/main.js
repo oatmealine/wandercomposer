@@ -1,7 +1,25 @@
-var render = require('./js/renderObj.js');
+//electron check
+var nodeRequire = window["nodeRequire"] || window["require"];
+
+this.electron = nodeRequire ? nodeRequire("electron") : null;
+if(!this.electron) {
+    document.getElementById("loading-image").innerHTML = "Sorry, but WanderComposer only runs on Electron!"
+    throw new Error("Non-Electron client")
+}
+
 var palette = require('./js/palettes.json')
 
-var nodeRequire = window["nodeRequire"] || window["require"];
+//load in modules
+const renderObj = require('./js/modules/renderObj.js');
+const renderGeo = require('./js/modules/renderGeo.js');
+
+const displayUtils = require('./js/utils/displayUtils.js')
+
+const levelOpen = require('./js/utils/levelLoad.js')
+const levelSave = require('./js/utils/levelSave.js')
+
+const fs = require('fs');
+const electron = require('electron');
 
 var app;
 var viewport;
@@ -9,113 +27,61 @@ var viewport;
 var level;
 var levelhash;
 
-var chosenpalette = "color"
 Object.keys(palette).forEach(key=>{
     palette[key].forEach((color, indx)=>{
         palette[key][indx] = parseInt(color, 16)
     })
 })
+palette.chosentemplate = "color";
+palette.color = []; //add in color palette, its generated and handled later
 
-function displayLoadScreen(bool) {
-    if(bool) {
-        document.getElementById('loading-info').innerText = "Loading..."
-        document.getElementById('loading').style.display = 'block';
-        let i = 0;
-        function loop () {
-            document.getElementById('loading').style.opacity = i/100
-            if(!i>=100) {
-                i+=10;
-                setTimeout(loop, 10);
-            }
-        }
-        loop();
-    } else {
-        document.getElementById('loading-info').innerText = ""
-        let i = 100;
-        function loop () {
-            document.getElementById('loading').style.opacity = i/100;
-            if(!i<=0) {
-                i-=10;
-                setTimeout(loop, 10);
-            } else {
-                document.getElementById('loading').style.display = 'none';
-            }
-        }
-        loop();
-    }
-}
-
-function popUp(text) {
-    let editPopup = document.getElementById('edit-popup');
-    let editPopupContent = document.getElementById('edit-popup-content');
-
-    editPopup.style.display = "block";
-    editPopupContent.innerHTML = '<a class="btn-floating btn-large waves-effect waves-light red edit-close"><i class="material-icons">clear</i></a>' + text;
-
-    //overwriting the edit-close class removes the onclick function, so we add it back
-    document.getElementsByClassName("edit-close")[0].onclick = function() {
-        document.getElementById('edit-popup').style.display = "none";
-    }
-}
-
-function displayGeoInfo(geo) {
-    popUp(`
-    <p1>Geometrical Shape | ${geo.id}</p1><br>
-    <b>X</b>: ${geo.x}<br>
-    <b>Y</b>: ${geo.y}<br>
-    <b>Color</b>: ${geo.color}<br>
-    <b>Support Points</b> (${geo.geo.length}): <a id="edit-supportpoints" class="waves-effect waves-light btn-small">Toggle Visibility</a><br>
-    <div id="support-points" style="display:none;">
-        - ${geo.geo.join("<br> - ")}
-    </div><br>
-    `)
-
-    document.getElementById("edit-supportpoints").onclick = function() {
-        let supportpoints = document.getElementById("support-points");
-        if(supportpoints.style.display === "none") {supportpoints.style.display = "block"} else supportpoints.style.display = "none"
-    }
-}
-
-function displayObjInfo(obj, i) {
-    var popupText = `
-    <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
-    <b>X</b>: <input type="text" name="edit-x" class="edit-textfield" value="${obj.x}"><br>
-    <b>Y</b>: <input type="text" name="edit-y" class="edit-textfield" value="${obj.y}"><br>
-    `
-
-    Object.keys(obj).forEach(key => {
-        if (!['x','y','id'].includes(key)) {
-            popupText += `<b>${key}</b>: <input type="text" name="edit-${key}" class="edit-textfield" value="${obj[key]}"><br>` //oh boy
-        }
-    })
-    popupText += '<a class="waves-effect waves-light btn-small" id="button-update">update</a>'
-    popUp(popupText)
-
-    document.getElementById("button-update").onclick = () => {
-        //oh BOY
-        Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
-            level.obj.find(o => o.id === obj.id)[textfield.name.replace("edit-","")] = textfield.value;
+function loadAssets() {
+    fs.readdir("./assets/obj", (e, files) => {
+        if(e) throw e;
+        files.forEach((file, i) => {
+            files[i] = 'assets/obj/'+file
         })
-        renderLevel(level);
-        displayObjInfo(obj);
-    }
+
+        PIXI.Loader.shared
+        .add(files)
+        .on("progress", loadProgressHandler)
+        .load(assetsLoaded);
+    })
 }
 
+function loadLevel(file, close) {
+    let pathArr = file[0].split("/")
+    let filename = pathArr[pathArr.length-1]
 
-function renderGeo(geo, geoObject) {
-    geoObject.moveTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
-    geo.geo.forEach(geoCoords => {
-        var coords = geoCoords.split(",");
-        geoObject.lineTo(coords[0]-geo.x, coords[1]-geo.y);
+    displayUtils.displayLoadScreen(true, document)
+    displayUtils.loadScreenText("Loading level "+filename+"...", document)
+
+    levelOpen(file, close)
+    .then(result => {
+        level = result[0];
+        levelhash = result[1];
+
+        document.title = result[2] + ' - WanderComposer'
+
+        renderLevel(level);
     })
-    geoObject.lineTo(geo.geo[0].split(",")[0]-geo.x, geo.geo[0].split(",")[1]-geo.y);
+}
+
+function saveLevel(file) {
+    let pathArr = file[0].split("/")
+    let filename = pathArr[pathArr.length-1]
+
+    displayUtils.displayLoadScreen(true, document)
+    displayUtils.loadScreenText("Saving level "+filename+"...", document)
+    levelSave(file, level, levelhash)
+    .then(() => {
+        displayUtils.displayLoadScreen(false, document)
+    })
 }
 
 function renderLevel(level) {
-    displayLoadScreen(true);
-    var colorconvert = require('color-convert')
-
-    document.getElementById('loading-info').innerText = "Loading level..."
+    console.log("rendering level...")
+    displayUtils.loadScreenText("Rendering level...", document)
     //clear to prevent level "clashing"
     app.renderer.clear()
     while(this.viewport.children.length > 0){ var child = this.viewport.getChildAt(0); this.viewport.removeChild(child);}
@@ -124,53 +90,19 @@ function renderLevel(level) {
     level.geo.sort((a, b) => a.layer - b.layer)
     level.geo.reverse()
 
-    level.geo.forEach((geo, indx) => {
-        if(geo.visible) {
-            let geoObject = new PIXI.Graphics();
-            let saturateFilter = new PIXI.filters.ColorMatrixFilter();
-            let colors;
+    level.geo.forEach((geo) => {
+        let geoObject = renderGeo(geo, false, palette);
 
-            if(chosenpalette === 'color') {
-                colors = [];
-                for (i = 0; i<=200; i++) {
-                    colors[i] = parseInt(colorconvert.hsl.hex(i*40%360, 100, 50), 16)
-                }
-            } else {
-                colors = palette[chosenpalette];
-            }
-
-            //colors 100+ are weird and seem to be the same for each palette so we add them in for any palette
-            for (i = 100; i<=150; i++) {
-                colors[i] = parseInt(colorconvert.hsl.hex((i-100)*20%360, 100, 50), 16)
-            }
-
-            geoObject.lineStyle(15, colors[geo.color], 1);
-            geoObject.beginFill(colors[geo.color], 0.8);
-            
-            geoObject.x = geo.x;
-            geoObject.y = geo.y;
+        if(geoObject) { //i have no clue what this little if does but it fixes everything so ill keep it
+            geoObject.mouseOverSprite = renderGeo(geo, true, palette);
 
             geoObject.interactive = true;
-
-            renderGeo(geo, geoObject)
-
-            //mouse-over ver with different colors
-            
-            geoObject.mouseOverSprite = new PIXI.Graphics();
-            let mouseOver = geoObject.mouseOverSprite
-            mouseOver.visible = false;
-            mouseOver.lineStyle(15, colors[geo.color], 1);
-            mouseOver.beginFill(colors[geo.color], 0.9);
-            mouseOver.filters = [saturateFilter]
-            renderGeo(geo, geoObject.mouseOverSprite)
-
-            geoObject.mouseOverSprite.x = geo.x;
-            geoObject.mouseOverSprite.y = geo.y;
+            geoObject.mouseOverSprite.visible = false;
 
             geoObject.on('rightclick', () => {
-                displayGeoInfo(geo)
+                displayUtils.displayGeoInfo(geo)
             });
-            
+
             geoObject.on('mouseover', () => {
                 geoObject.alpha = 0; // we use alpha here because !visible doesnt allow events to be called
                 geoObject.mouseOverSprite.visible = true;
@@ -184,23 +116,23 @@ function renderLevel(level) {
         }
     })
 
-    level.obj.forEach((obj, i) => {
+    level.obj.forEach((obj) => {
         let object;
         
-        if(render[obj.name] === undefined) {
-            object = render["unknown"](obj, false)
-            object.mouseOverSprite = render["unknown"](obj, true)
+        if(renderObj[obj.name] === undefined) {
+            object = renderObj["unknown"](obj, false)
+            object.mouseOverSprite = renderObj["unknown"](obj, true)
         } else {
             console.log(obj.name+" has custom render function")
-            object = render[obj.name](obj, false) //second parameter is for "selected"
-            object.mouseOverSprite = render[obj.name](obj, true) 
+            object = renderObj[obj.name](obj, false) //second parameter is for "selected"
+            object.mouseOverSprite = renderObj[obj.name](obj, true) 
         }
 
         object.interactive = true;
         object.mouseOverSprite.visible = false;
 
         object.on('rightclick', () => {
-            displayObjInfo(obj, i)
+            displayUtils.displayObjInfo(obj, document)
         });
 
         object.on('mouseover', () => {
@@ -214,7 +146,7 @@ function renderLevel(level) {
 
         this.viewport.addChild(object, object.mouseOverSprite);
     })
-    displayLoadScreen(false);
+    displayUtils.displayLoadScreen(false, document);
 }
 
 function resize() {
@@ -234,147 +166,74 @@ function loadProgressHandler(loader, resource) {
 }
 
 function assetsLoaded() {
-    const fs = require('fs');
-
     //open up the demo (prologue) level on boot
     //TODO: open last edited level instead
-    file = './js/act00_intro.level';
-    console.log('opening level file '+file);
-
-    fs.readFile('./js/act00_intro.level', {encoding: 'utf8'}, (err, data) => {
-        if (err) throw err;
-        level = JSON.parse(data.split("\n")[1]);
-        levelhash = data.split("\n")[0];
-        var pathArr = file[0].split("/")
-        var filename = pathArr[pathArr.length-1]
-        document.title = "WanderComposer"
-        chosenpalette = "intro";
-        renderLevel(level);
-    })
+    palette.chosenpalette = 'intro';
+    file = ['./js/act00_intro.level'];
+    loadLevel(file, true)
 }
 
 window.onload = function() {
-    this.electron = nodeRequire ? nodeRequire("electron") : null;
-    if(!this.electron) {
-        document.getElementById("loading-image").innerHTML = "Sorry, but WanderComposer only runs on Electron!"
-    } else {
-        const electron = require('electron');
-        const fs = require('fs');
+    //topbar buttons
+    document.getElementById('button-file').onclick = () => this.electron.ipcRenderer.send("openLevelFile");
+    document.getElementById('button-save').onclick = () => this.electron.ipcRenderer.send("saveLevelFile");
+    document.getElementById('button-palette').onclick = () => displayUtils.displayPaletteScreen(document, palette)
+        .then((r) => {
+            let e = r[0];
+            let result = r[1];
 
-        //topbar buttons
-        document.getElementById('button-file').onclick = () => {
-            this.electron.ipcRenderer.send("openLevelFile");
-        }
-        document.getElementById('button-save').onclick = () => {
-            this.electron.ipcRenderer.send("saveLevelFile");
-        }
-        document.getElementById('button-palette').onclick = () => {
-            popUp(`
-            <p1>Palette</p1><br>
-            <b>Current palette:</b> ${chosenpalette}<br>
-            <input type="text" name="palette" id="palette-textfield"> <a id="palette-change" class="waves-effect waves-light btn-small">change palette</a><br>
-            <b>Palette List:</b><br>
-            - color (default)<br>
-            - ${Object.keys(palette).join("<br> - ")}
-            `)
-
-            document.getElementById('palette-change').onclick = () => {
-                var newPalette = document.getElementById('palette-textfield').value;
-                if(palette[newPalette] === undefined) {
-                    alert(`'${newPalette}' is an invalid palette!`)
-                } else {
-                    chosenpalette = newPalette
-                    renderLevel(level);
-                }
-            }
-        }
-
-        let editPopup = document.getElementById('edit-popup');
-
-        window.onclick = function(event) {
-            if (event.target == editPopup) {
-                editPopup.style.display = "none";
-            }
-        }
-
-        //Create a Pixi Application
-        app = new PIXI.Application({width: window.innerWidth, height: window.innerHeight});
-
-        //viewport
-        const Viewport = PIXI.extras.Viewport;
-        this.viewport = new Viewport({
-            screenWidth: window.innerWidth,
-            screenHeight: window.innerHeight,
-            worldWidth: 1000,
-            worldHeight: 1000,
-            interaction: this.interaction
-        });
-        
-        app.renderer.backgroundColor = 0x444444;
-        app.renderer.view.style.position = "absolute";
-        app.renderer.view.style.display = "block";
-
-        app.stage.addChild(this.viewport);
-        viewport
-            .drag()
-            .pinch()
-            .wheel({ smooth: 6 });
-
-        //Add the canvas that Pixi automatically created for you to the HTML document
-        document.getElementById("mapview").appendChild(app.view);
-
-        document.addEventListener("DOMContentLoaded", resize, false);
-        window.onresize = resize;
-        resize(); resize(); //oh god
-
-        electron.ipcRenderer.on("openLevelFileCB", (e, file) => {
-            if(file) {
-                console.log('opening level file '+file)
-                fs.readFile(file[0], {encoding: 'utf8'}, (err, data) => {
-                    if (err) throw err;
-                    levelhash = data.split("\n")[0];
-                    level = JSON.parse(data.split("\n")[1]);
-                    var pathArr = file[0].split("/")
-                    var filename = pathArr[pathArr.length-1]
-                    document.title = filename + " - WanderComposer"
-                    renderLevel(level);
-                })
+            if(e) {
+                alert(e);
             } else {
-                if(!level) {
-                    window.close();
-                }
+                palette.chosenpalette = result;
+                renderLevel(level);
             }
         });
 
-        electron.ipcRenderer.on("saveLevelFileCB", (e, file) => {
-            if(file) {
-                console.log('saving level '+level)
-
-                level.obj.forEach((object, i) => {
-                    Object.keys(object).forEach(k => {
-                        if (!isNaN(object[k])) level.obj[i][k] = parseInt(level.obj[i][k])
-                        console.log(isNaN(object[k]))
-                    })
-                })
-                var levelorig = levelhash+'\n'+JSON.stringify(level)
-
-                fs.writeFile(file, levelorig, {encoding: 'utf8'}, (err, data) => {
-                    if (err) throw err;
-                    console.log("saved")
-                })
-            }
-        });
-
-        fs.readdir("./assets/obj", (e, files) => {
-            if(e) throw e;
-            files.forEach((file, i) => {
-                files[i] = 'assets/obj/'+file
-            })
-
-            PIXI.Loader.shared
-            .add(files)
-            .on("progress", loadProgressHandler)
-            .load(assetsLoaded);
-        })
+    window.onclick = function(event) {
+        if (event.target == document.getElementById('edit-popup')) {
+            editPopup.style.display = "none";
+        }
     }
+
+    //Create a Pixi Application
+    app = new PIXI.Application({width: window.innerWidth, height: window.innerHeight});
+
+    //viewport
+    const Viewport = PIXI.extras.Viewport;
+    this.viewport = new Viewport({
+        screenWidth: window.innerWidth,
+        screenHeight: window.innerHeight,
+        worldWidth: 1000,
+        worldHeight: 1000,
+        interaction: this.interaction
+    });
+    
+    app.renderer.backgroundColor = 0x444444;
+    app.renderer.view.style.position = "absolute";
+    app.renderer.view.style.display = "block";
+
+    app.stage.addChild(this.viewport);
+    viewport
+        .drag()
+        .pinch()
+        .wheel({ smooth: 6 });
+
+    //Add the canvas that Pixi automatically created for you to the HTML document
+    document.getElementById("mapview").appendChild(app.view);
+
+    document.addEventListener("DOMContentLoaded", resize, false);
+    window.onresize = resize;
+    resize(); resize(); //oh god
+
+    electron.ipcRenderer.on("openLevelFileCB", (e, file) => {
+        loadLevel(file, false);
+    });
+
+    electron.ipcRenderer.on("saveLevelFileCB", (e, file) => {
+        saveLevel(file);
+    });
+
+    loadAssets();
+
 }
