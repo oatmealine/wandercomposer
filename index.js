@@ -35,8 +35,29 @@ function createWindow () {
   })
 
   ipcMain.on("openLevelFile", (event) => {
-    var levelFile = dialog.showOpenDialog({ title: "Open a Wandersong .level file!", properties: ['openFile'] })
+    var levelFile = dialog.showOpenDialog({ 
+      title: "Open a Wandersong .level file!", 
+      properties: ['openFile'], 
+      buttonLabel: "Load",
+      filters: [
+        { name: 'Wandersong Levels', extensions: ['level'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    })
     event.sender.send("openLevelFileCB", levelFile);
+  });
+  ipcMain.on("saveLevelFile", (event) => {
+    var levelFile = dialog.showSaveDialog({ 
+      title: "Save the level!", 
+      properties: ['saveFile'], 
+      buttonLabel: "Save", 
+      defaultPath: "mylevel.level",
+      filters: [
+        { name: 'Wandersong Levels', extensions: ['level'] },
+        { name: 'All Files', extensions: ['*'] }
+      ]
+    })
+    event.sender.send("saveLevelFileCB", levelFile);
   });
 }
 

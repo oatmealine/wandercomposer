@@ -5,7 +5,9 @@ var nodeRequire = window["nodeRequire"] || window["require"];
 
 var app;
 var viewport;
+
 var level;
+var levelhash;
 
 var chosenpalette = "color"
 Object.keys(palette).forEach(key=>{
@@ -75,7 +77,6 @@ function displayGeoInfo(geo) {
 }
 
 function displayObjInfo(obj, i) {
-    console.log(obj)
     var popupText = `
     <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
     <b>X</b>: <input type="text" name="edit-x" class="edit-textfield" value="${obj.x}"><br>
@@ -83,7 +84,7 @@ function displayObjInfo(obj, i) {
     `
 
     Object.keys(obj).forEach(key => {
-        if (!['name','x','y','id'].includes(key)) {
+        if (!['x','y','id'].includes(key)) {
             popupText += `<b>${key}</b>: <input type="text" name="edit-${key}" class="edit-textfield" value="${obj[key]}"><br>` //oh boy
         }
     })
@@ -93,9 +94,10 @@ function displayObjInfo(obj, i) {
     document.getElementById("button-update").onclick = () => {
         //oh BOY
         Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
-            level.obj.find(o => o.id === obj.id)[textfield.name.replace("edit-","")] = parseInt(textfield.value);
+            level.obj.find(o => o.id === obj.id)[textfield.name.replace("edit-","")] = textfield.value;
         })
         renderLevel(level);
+        displayObjInfo(obj);
     }
 }
 
@@ -242,6 +244,7 @@ function assetsLoaded() {
     fs.readFile('./js/act00_intro.level', {encoding: 'utf8'}, (err, data) => {
         if (err) throw err;
         level = JSON.parse(data.split("\n")[1]);
+        levelhash = data.split("\n")[0];
         var pathArr = file[0].split("/")
         var filename = pathArr[pathArr.length-1]
         document.title = "WanderComposer"
@@ -261,6 +264,9 @@ window.onload = function() {
         //topbar buttons
         document.getElementById('button-file').onclick = () => {
             this.electron.ipcRenderer.send("openLevelFile");
+        }
+        document.getElementById('button-save').onclick = () => {
+            this.electron.ipcRenderer.send("saveLevelFile");
         }
         document.getElementById('button-palette').onclick = () => {
             popUp(`
@@ -326,6 +332,7 @@ window.onload = function() {
                 console.log('opening level file '+file)
                 fs.readFile(file[0], {encoding: 'utf8'}, (err, data) => {
                     if (err) throw err;
+                    levelhash = data.split("\n")[0];
                     level = JSON.parse(data.split("\n")[1]);
                     var pathArr = file[0].split("/")
                     var filename = pathArr[pathArr.length-1]
@@ -336,6 +343,25 @@ window.onload = function() {
                 if(!level) {
                     window.close();
                 }
+            }
+        });
+
+        electron.ipcRenderer.on("saveLevelFileCB", (e, file) => {
+            if(file) {
+                console.log('saving level '+level)
+
+                level.obj.forEach((object, i) => {
+                    Object.keys(object).forEach(k => {
+                        if (!isNaN(object[k])) level.obj[i][k] = parseInt(level.obj[i][k])
+                        console.log(isNaN(object[k]))
+                    })
+                })
+                var levelorig = levelhash+'\n'+JSON.stringify(level)
+
+                fs.writeFile(file, levelorig, {encoding: 'utf8'}, (err, data) => {
+                    if (err) throw err;
+                    console.log("saved")
+                })
             }
         });
 
