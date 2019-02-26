@@ -14,35 +14,6 @@ Object.keys(palette).forEach(key=>{
     })
 })
 
-function hslToHex(h, s, l) {
-    h /= 360;
-    s /= 100;
-    l /= 100;
-    let r, g, b;
-    if (s === 0) {
-      r = g = b = l; // achromatic
-    } else {
-      const hue2rgb = (p, q, t) => {
-        if (t < 0) t += 1;
-        if (t > 1) t -= 1;
-        if (t < 1 / 6) return p + (q - p) * 6 * t;
-        if (t < 1 / 2) return q;
-        if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
-        return p;
-      };
-      const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-      const p = 2 * l - q;
-      r = hue2rgb(p, q, h + 1 / 3);
-      g = hue2rgb(p, q, h);
-      b = hue2rgb(p, q, h - 1 / 3);
-    }
-    const toHex = x => {
-      const hex = Math.round(x * 255).toString(16);
-      return hex.length === 1 ? '0' + hex : hex;
-    };
-    return `${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
 function displayLoadScreen(bool) {
     if(bool) {
         document.getElementById('loading-info').innerText = "Loading..."
@@ -115,6 +86,8 @@ function renderGeo(geo, geoObject) {
 
 function renderLevel(level) {
     displayLoadScreen(true);
+    var colorconvert = require('color-convert')
+
     document.getElementById('loading-info').innerText = "Loading level..."
     //clear to prevent level "clashing"
     app.renderer.clear()
@@ -132,7 +105,7 @@ function renderLevel(level) {
             if(chosenpalette === 'color') {
                 colors = [];
                 for (i = 0; i<=200; i++) {
-                    colors[i] = parseInt(hslToHex(i*40%360, 100, 50), 16)
+                    colors[i] = parseInt(colorconvert.hsl.hex(i*40%360, 100, 50), 16)
                 }
             } else {
                 colors = palette[chosenpalette];
@@ -140,13 +113,19 @@ function renderLevel(level) {
 
             //colors 100+ are weird and seem to be the same for each palette so we add them in for any palette
             for (i = 100; i<=150; i++) {
-                colors[i] = parseInt(hslToHex((i-100)*20%360, 100, 50), 16)
+                colors[i] = parseInt(colorconvert.hsl.hex((i-100)*20%360, 100, 50), 16)
             }
-            let fillColors = colors //TODO: make colors darker instead of using regular colors
+
+            let fillColors = [];
+            colors.forEach(c => {
+                let hslcolor = colorconvert.hex.hsl(c.toString(16))
+                hslcolor[2] = 60;
+                fillColors.push(parseInt(colorconvert.hsl.hex(hslcolor), 16));
+            })
 
 
             geoObject.lineStyle(15, colors[geo.color], 1);
-            geoObject.beginFill(fillColors[geo.color], 0.8);
+            geoObject.beginFill(colors[geo.color], 0.8);
             
             geoObject.x = geo.x;
             geoObject.y = geo.y;
@@ -159,7 +138,7 @@ function renderLevel(level) {
             
             geoObject.mouseOverSprite = new PIXI.Graphics();
             geoObject.mouseOverSprite.visible = false;
-            geoObject.mouseOverSprite.lineStyle(15, colors[geo.color], 1);
+            geoObject.mouseOverSprite.lineStyle(15, fillColors[geo.color], 1);
             geoObject.mouseOverSprite.beginFill(colors[geo.color], 0.9);
             renderGeo(geo, geoObject.mouseOverSprite)
 

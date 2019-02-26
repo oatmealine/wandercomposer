@@ -25,6 +25,7 @@
   },
   "homepage": "https://github.com/thefoxbot/wandercomposer#readme",
   "dependencies": {
+    "color-convert": "^2.0.0",
     "electron": "^4.0.5",
     "http-server": "^0.11.1",
     "pixi-viewport": "^3.21.0",
