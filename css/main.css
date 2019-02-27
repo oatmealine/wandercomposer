@@ -114,6 +114,12 @@ p1 {
     left: 85%;
     transform: translateX(-50%) translateY(-50%);
 }
+#button-delete {
+    position: absolute;
+    top: 73%;
+    left: 80%;
+    transform: translateX(-50%) translateY(-50%);
+}
 
 /* animations */
 @keyframes fadein-out {

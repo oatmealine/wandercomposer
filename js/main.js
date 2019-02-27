@@ -76,8 +76,9 @@ function saveLevel(file) {
     displayUtils.displayLoadScreen(true, document)
     displayUtils.loadScreenText("Saving level "+filename+"...", document)
     levelSave(file, level, levelhash)
-    .then(() => {
-        displayUtils.displayLoadScreen(false, document)
+    .then((newlevel) => {
+        level = newlevel;
+        renderLevel(level);
     })
 }
 
@@ -122,8 +123,9 @@ function renderLevel(level) {
     })
 
     level.obj.forEach((obj) => {
+        if(!obj) return;
         let object;
-        
+
         if(renderObj[obj.name] === undefined) {
             object = renderObj["unknown"](obj, false)
             object.mouseOverSprite = renderObj["unknown"](obj, true)
@@ -153,6 +155,7 @@ function renderLevel(level) {
 
         this.viewport.addChild(object, object.mouseOverSprite);
     })
+    console.log("render successfully completed")
     displayUtils.displayLoadScreen(false, document);
 }
 

@@ -5,18 +5,38 @@ function levelSave(file, level, levelhash) {
         if(file) {
             console.log('saving level '+level)
 
-            level.obj.forEach((object, i) => {
-                Object.keys(object).forEach(k => {
-                    if (!isNaN(object[k])) level.obj[i][k] = parseInt(level.obj[i][k])
-                })
+            let newlevel = {geo: [], obj: []};
+
+            level.geo.forEach((object, i) => {
+                if(object) {
+                    let newobject = {};
+                    Object.keys(object).forEach(k => {
+                        if (!isNaN(object[k])) {
+                            newobject[k] = parseInt(level.geo[i][k])
+                        } else newobject[k] = level.geo[i][k]
+                    })
+                    newlevel.geo.push(newobject)
+                }
             })
 
-            var levelorig = levelhash+'\n'+JSON.stringify(level)
+            level.obj.forEach((object, i) => {
+                if(object) {
+                    let newobject = {};
+                    Object.keys(object).forEach(k => {
+                        if (!isNaN(object[k])) {
+                            newobject[k] = parseInt(level.obj[i][k])
+                        } else newobject[k] = level.obj[i][k]
+                    })
+                    newlevel.obj.push(newobject)
+                }
+            })
+
+            var levelorig = levelhash+'\n'+JSON.stringify(newlevel)
 
             fs.writeFile(file, levelorig, {encoding: 'utf8'}, (err) => {
                 if (err) throw err;
                 console.log("saved");
-                resolve();
+                resolve(newlevel);
             })
         }
     })
