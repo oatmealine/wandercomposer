@@ -27,7 +27,7 @@ function popUp(text, document) {
     }
 }
 
-function displayGeoInfo(geo) {
+function displayGeoInfo(geo, document) {
     popUp(`
     <p1>Geometrical Shape | ${geo.id}</p1><br>
     <b>X</b>: ${geo.x}<br>
@@ -37,7 +37,7 @@ function displayGeoInfo(geo) {
     <div id="support-points" style="display:none;">
         - ${geo.geo.join("<br> - ")}
     </div><br>
-    `)
+    `, document)
 
     document.getElementById("edit-supportpoints").onclick = function() {
         let supportpoints = document.getElementById("support-points");

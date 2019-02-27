@@ -100,7 +100,7 @@ function renderLevel(level) {
             geoObject.mouseOverSprite.visible = false;
 
             geoObject.on('rightclick', () => {
-                displayUtils.displayGeoInfo(geo)
+                displayUtils.displayGeoInfo(geo, document);
             });
 
             geoObject.on('mouseover', () => {
