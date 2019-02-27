@@ -28,28 +28,48 @@ function popUp(text, document) {
 }
 
 function displayGeoInfo(geo, document) {
-    popUp(`
-    <p1>Geometrical Shape | ${geo.id}</p1><br>
-    <b>X</b>: ${geo.x}<br>
-    <b>Y</b>: ${geo.y}<br>
-    <b>Color</b>: ${geo.color}<br>
-    <b>Support Points</b> (${geo.geo.length}): <a id="edit-supportpoints" class="waves-effect waves-light btn-small purple">Toggle Visibility</a><br>
-    <div id="support-points" style="display:none;">
-        - ${geo.geo.join("<br> - ")}
-    </div><br>
-    `, document)
+    return new Promise(resolve => {
+        let popupText = `<p1>Geometrical Shape | ${geo.id}</p1><br>`;
 
-    document.getElementById("edit-supportpoints").onclick = function() {
-        let supportpoints = document.getElementById("support-points");
-        if(supportpoints.style.display === "none") {supportpoints.style.display = "block"} else supportpoints.style.display = "none"
-    }
+        Object.keys(geo).forEach(key => {
+            if (!['id', 'geo'].includes(key)) {
+                popupText += `
+                <label for="${key}">${key}</label>
+                <input type="text" name="${key}" class="edit-textfield materialize-textarea white-text" placeholder="${geo[key]}" value="${geo[key]}"><br>
+                `
+            }
+        })
+    
+        popupText += `<b>Support Points</b> (${geo.geo.length}): <a id="edit-supportpoints" class="waves-effect waves-light btn-small purple">Toggle Visibility</a><br>
+        <div id="support-points" style="display:none;">`
+        geo.geo.forEach(geo=>{
+            popupText += '<br>'+geo
+        })
+        popupText += `</div><br>`
+    
+        popupText += '<a class="btn-floating btn-large waves-effect waves-light green" id="button-update"><i class="material-icons">check</i></a>'
+    
+        popUp(popupText, document);
+    
+        document.getElementById("edit-supportpoints").onclick = function() {
+            let supportpoints = document.getElementById("support-points");
+            if(supportpoints.style.display === "none") {supportpoints.style.display = "block"} else supportpoints.style.display = "none"
+        }
+    
+        document.getElementById("button-update").onclick = () => {
+            //oh BOY
+            Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
+                level.geo.find(g => g.id === geo.id)[textfield.name] = textfield.value;
+            })
+            document.getElementById('edit-popup').style.display = "none";
+            resolve();
+        }
+    })
 }
 
 function displayObjInfo(obj, document) {
     return new Promise(resolve => {
-        var popupText = `
-        <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
-        `
+        var popupText = `<p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>`
     
         Object.keys(obj).forEach(key => {
             if (!['id'].includes(key)) {
@@ -59,7 +79,7 @@ function displayObjInfo(obj, document) {
                 ` //oh boy
             }
         })
-        popupText += '<a class="waves-effect waves-light btn-small purple" id="button-update">update</a>'
+        popupText += '<a class="btn-floating btn-large waves-effect waves-light green" id="button-update"><i class="material-icons">check</i></a>'
         popUp(popupText, document)
     
         document.getElementById("button-update").onclick = () => {
@@ -67,7 +87,7 @@ function displayObjInfo(obj, document) {
             Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
                 level.obj.find(o => o.id === obj.id)[textfield.name] = textfield.value;
             })
-            editPopup.style.display = "none";
+            document.getElementById('edit-popup').style.display = "none";
             resolve();
         }
     })

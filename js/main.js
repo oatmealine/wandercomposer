@@ -18,6 +18,8 @@ const displayUtils = require('./js/utils/displayUtils.js')
 const levelOpen = require('./js/utils/levelLoad.js')
 const levelSave = require('./js/utils/levelSave.js')
 
+const place = require('./js/modules/placeObj.js')
+
 const fs = require('fs');
 const electron = require('electron');
 
@@ -100,7 +102,10 @@ function renderLevel(level) {
             geoObject.mouseOverSprite.visible = false;
 
             geoObject.on('rightclick', () => {
-                displayUtils.displayGeoInfo(geo, document);
+                displayUtils.displayGeoInfo(geo, document)
+                .then(() => {
+                    renderLevel(level);
+                });
             });
 
             geoObject.on('mouseover', () => {
@@ -123,7 +128,6 @@ function renderLevel(level) {
             object = renderObj["unknown"](obj, false)
             object.mouseOverSprite = renderObj["unknown"](obj, true)
         } else {
-            console.log(obj.name+" has custom render function")
             object = renderObj[obj.name](obj, false) //second parameter is for "selected"
             object.mouseOverSprite = renderObj[obj.name](obj, true) 
         }
@@ -192,6 +196,15 @@ window.onload = function() {
                 renderLevel(level);
             }
         });
+    document.getElementById('button-place-obj').onclick = () => {
+        place("objBard", level, 0, 0);
+        renderLevel(level);
+    }
+
+    document.getElementById('button-place-geo').onclick = () => {
+        place("geo", level, 0, 0);
+        renderLevel(level);
+    }
 
     window.onclick = function(event) {
         if (event.target == document.getElementById('edit-popup')) {

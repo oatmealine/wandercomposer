@@ -43,11 +43,26 @@ p1 {
     height: 45px;
     width: 100%;
     background-color: #333;
-    color: #111;
+    color: #fff;
     top: 0;
     left: 0;
     padding: 5px;
     box-sizing: border-box;
+    border-bottom: 2px solid #555;
+}
+#sidebar {
+    position: absolute;
+    z-index: 2;
+    height: 10%;
+    width: 20%;
+    background-color: #444;
+    color: #fff;
+    top: 0;
+    left: 80%;
+    padding: 10px;
+    box-sizing: border-box;
+    border-left: 4px solid #666;
+    border-bottom: 4px solid #666;
 }
 #mapview {
     z-index: 0;
@@ -91,6 +106,12 @@ p1 {
     position: absolute;
     top: 23%;
     left: 90%;
+    transform: translateX(-50%) translateY(-50%);
+}
+#button-update {
+    position: absolute;
+    top: 73%;
+    left: 85%;
     transform: translateX(-50%) translateY(-50%);
 }
 
