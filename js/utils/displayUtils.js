@@ -46,28 +46,31 @@ function displayGeoInfo(geo, document) {
 }
 
 function displayObjInfo(obj, document) {
-    var popupText = `
-    <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
-    `
-
-    Object.keys(obj).forEach(key => {
-        if (!['id'].includes(key)) {
-            popupText += `
-            <label for="${key}">${key}</label>
-            <input type="text" name="${key}" class="edit-textfield materialize-textarea white-text" placeholder="${obj[key]}" value="${obj[key]}"><br>
-            ` //oh boy
+    return new Promise(resolve => {
+        var popupText = `
+        <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
+        `
+    
+        Object.keys(obj).forEach(key => {
+            if (!['id'].includes(key)) {
+                popupText += `
+                <label for="${key}">${key}</label>
+                <input type="text" name="${key}" class="edit-textfield materialize-textarea white-text" placeholder="${obj[key]}" value="${obj[key]}"><br>
+                ` //oh boy
+            }
+        })
+        popupText += '<a class="waves-effect waves-light btn-small purple" id="button-update">update</a>'
+        popUp(popupText, document)
+    
+        document.getElementById("button-update").onclick = () => {
+            //oh BOY
+            Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
+                level.obj.find(o => o.id === obj.id)[textfield.name] = textfield.value;
+            })
+            editPopup.style.display = "none";
+            resolve();
         }
     })
-    popupText += '<a class="waves-effect waves-light btn-small purple" id="button-update">update</a>'
-    popUp(popupText, document)
-
-    document.getElementById("button-update").onclick = () => {
-        //oh BOY
-        Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
-            level.obj.find(o => o.id === obj.id)[textfield.name] = textfield.value;
-        })
-        editPopup.style.display = "none";
-    }
 }
 
 function displayPaletteScreen(document, palette) {

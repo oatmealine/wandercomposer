@@ -134,7 +134,7 @@ function renderLevel(level) {
         object.on('rightclick', () => {
             displayUtils.displayObjInfo(obj, document)
             .then(() => {
-
+                renderLevel(level);
             })
         });
 
