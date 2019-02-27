@@ -39,6 +39,42 @@ const generic2x = (obj, select) => {
     return object
 }
 
+const genericTrigger = (obj, select) => {
+    let fillcolor = "#fff";
+    if(select) fillcolor = "#eee"
+
+    let bottom = 100;
+    let top = 100;
+    let right = 100;
+    let left = 100;
+
+    if(obj.bottom) bottom = obj.bottom;
+    if(obj.top) top = obj.top;
+    if(obj.left) left = obj.left;
+    if(obj.right) right = obj.right;
+
+    let text = new PIXI.Text(obj.name.replace("obj",""), {
+        fill: fillcolor,
+        fontSize: 100
+    });
+    
+    let object = new PIXI.Graphics();
+
+    object.lineStyle(15, 0xEEEEEE, 1);
+    object.beginFill(0xEEEEEE, 0.5+select/10);
+
+    object.x = obj.x;
+    object.y = obj.y;
+
+    text.x = (left-right)/2
+    text.y = (bottom-top)/2
+
+    object.drawRect(left, top, right-left, bottom-top);
+
+    object.addChild(text);
+    return object;
+}
+
 module.exports = {
     //special render functions are needed for non-sprite renders and renders with weird x/y/width/height properties
     objBard: function(obj, select) { //bard has a weird y value so we add the y manually
@@ -81,5 +117,7 @@ module.exports = {
     objSeal: generic2x,
     objLightbulb: generic2x,
     objEnemy_bat: generic2x,
-    objSWORD: generic2x
+    objSWORD: generic2x,
+
+    objCameralook: genericTrigger
 }
