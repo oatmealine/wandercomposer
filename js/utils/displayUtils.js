@@ -33,7 +33,7 @@ function displayGeoInfo(geo) {
     <b>X</b>: ${geo.x}<br>
     <b>Y</b>: ${geo.y}<br>
     <b>Color</b>: ${geo.color}<br>
-    <b>Support Points</b> (${geo.geo.length}): <a id="edit-supportpoints" class="waves-effect waves-light btn-small">Toggle Visibility</a><br>
+    <b>Support Points</b> (${geo.geo.length}): <a id="edit-supportpoints" class="waves-effect waves-light btn-small purple">Toggle Visibility</a><br>
     <div id="support-points" style="display:none;">
         - ${geo.geo.join("<br> - ")}
     </div><br>
@@ -48,26 +48,25 @@ function displayGeoInfo(geo) {
 function displayObjInfo(obj, document) {
     var popupText = `
     <p1>${obj.name.replace("obj","")} | ${obj.id}</p1><br>
-    <b>X</b>: <input type="text" name="edit-x" class="edit-textfield" value="${obj.x}"><br>
-    <b>Y</b>: <input type="text" name="edit-y" class="edit-textfield" value="${obj.y}"><br>
     `
 
     Object.keys(obj).forEach(key => {
-        if (!['x','y','id'].includes(key)) {
-            popupText += `<b>${key}</b>: <input type="text" name="edit-${key}" class="edit-textfield" value="${obj[key]}"><br>` //oh boy
+        if (!['id'].includes(key)) {
+            popupText += `
+            <label for="${key}">${key}</label>
+            <input type="text" name="${key}" class="edit-textfield materialize-textarea white-text" placeholder="${obj[key]}" value="${obj[key]}"><br>
+            ` //oh boy
         }
     })
-    popupText += '<a class="waves-effect waves-light btn-small" id="button-update">update</a>'
+    popupText += '<a class="waves-effect waves-light btn-small purple" id="button-update">update</a>'
     popUp(popupText, document)
 
     document.getElementById("button-update").onclick = () => {
         //oh BOY
         Array.from(document.getElementsByClassName("edit-textfield")).forEach((textfield) => {
-            level.obj.find(o => o.id === obj.id)[textfield.name.replace("edit-","")] = textfield.value;
+            level.obj.find(o => o.id === obj.id)[textfield.name] = textfield.value;
         })
         editPopup.style.display = "none";
-        renderLevel(level);
-        displayObjInfo(obj, document);
     }
 }
 
@@ -76,7 +75,7 @@ function displayPaletteScreen(document, palette) {
         popUp(`
             <p1>Palette</p1><br>
             <b>Current palette:</b> ${palette.chosenpalette}<br>
-            <input type="text" name="palette" id="palette-textfield"> <a id="palette-change" class="waves-effect waves-light btn-small">change palette</a><br>
+            <a id="palette-change" class="waves-effect waves-light btn-small purple inline">change palette</a><input type="text" name="palette" id="palette-textfield" class="inline white-text"><br>
             <b>Palette List:</b><br>
             - ${Object.keys(palette).join("<br> - ")}
         `, document)

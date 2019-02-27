@@ -42,7 +42,7 @@ p1 {
     position: absolute;
     height: 45px;
     width: 100%;
-    background-color: #eee;
+    background-color: #333;
     color: #111;
     top: 0;
     left: 0;
@@ -77,8 +77,8 @@ p1 {
 }
   
 .edit-content {
-    background-color: #fefefe;
-    color: #111;
+    background-color: #121212;
+    color: #fefefe;
     margin: 15% auto;
     padding: 20px;
     height: 55%;
